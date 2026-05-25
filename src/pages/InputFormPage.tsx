@@ -1,6 +1,10 @@
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { userService, UserProfile } from '@/services/userService';
+import { progressService, ProgressMetrics } from '@/services/progressService';
+import { workoutService } from '@/services/workoutService';
+import { dietService } from '@/services/dietService';
+import { historyService } from '@/services/historyService';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -9,7 +13,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
-import { progressService } from '@/services/progressService';
 
 const InputFormPage = () => {
   const { user } = useAuth();
@@ -38,12 +41,34 @@ const InputFormPage = () => {
 
     userService.saveProfile(profile);
 
-    // Add progress entry
+    // Add progress entry with metrics
     const heightM = profile.height / 100;
     const bmi = Math.round((profile.weight / (heightM * heightM)) * 10) / 10;
-    progressService.addEntry(user.id, { date: new Date().toISOString().split('T')[0], weight: profile.weight, bmi });
+    const today = new Date().toISOString().split('T')[0];
+    
+    progressService.addEntry(user.id, { date: today, weight: profile.weight, bmi });
+    
+    // Add detailed metric for analytics
+    const metric: ProgressMetrics = {
+      userId: user.id,
+      date: today,
+      weight: profile.weight,
+      bmi,
+      initialWeight: profile.weight,
+      initialBMI: bmi,
+      goalWeight: profile.weight - 5,
+    };
+    progressService.addMetric(user.id, metric);
 
-    toast({ title: 'Profile saved!', description: 'Generating your personalized plan...' });
+    // Generate workout plan
+    const workoutPlan = workoutService.saveUserPlan(user.id, goal);
+    historyService.savePlanToHistory(user.id, 'workout', workoutPlan.plan.name, goal, workoutPlan.plan);
+
+    // Generate diet plan
+    const dietPlan = dietService.saveUserDietPlan(user.id, goal);
+    historyService.savePlanToHistory(user.id, 'diet', dietPlan.plan.name, goal, dietPlan.plan);
+
+    toast({ title: 'Profile saved!', description: 'Generating your personalized workout and diet plans...' });
     navigate('/recommendations');
   };
 

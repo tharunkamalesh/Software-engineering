@@ -137,8 +137,84 @@ const workoutPlans: Record<string, WorkoutPlan> = {
   },
 };
 
+export interface UserWorkoutPlan {
+  userId: string;
+  goal: string;
+  plan: WorkoutPlan;
+  savedDate: string;
+  isActive: boolean;
+}
+
+const USER_PLANS_KEY = 'fitness_user_workout_plans';
+
+function getUserPlans(): Record<string, UserWorkoutPlan[]> {
+  return JSON.parse(localStorage.getItem(USER_PLANS_KEY) || '{}');
+}
+
 export const workoutService = {
   getWorkoutPlan(goal: string): WorkoutPlan {
     return workoutPlans[goal] || workoutPlans.maintenance;
+  },
+
+  saveUserPlan(userId: string, goal: string, customPlan?: WorkoutPlan) {
+    const plans = getUserPlans();
+    if (!plans[userId]) plans[userId] = [];
+    
+    const plan = customPlan || this.getWorkoutPlan(goal);
+    
+    // Mark previous active plan as inactive
+    plans[userId].forEach(p => p.isActive = false);
+    
+    const userPlan: UserWorkoutPlan = {
+      userId,
+      goal,
+      plan,
+      savedDate: new Date().toISOString(),
+      isActive: true,
+    };
+    
+    plans[userId].push(userPlan);
+    localStorage.setItem(USER_PLANS_KEY, JSON.stringify(plans));
+    return userPlan;
+  },
+
+  getUserActivePlan(userId: string): UserWorkoutPlan | undefined {
+    const plans = getUserPlans();
+    return (plans[userId] || []).find(p => p.isActive);
+  },
+
+  getUserPlans(userId: string): UserWorkoutPlan[] {
+    const plans = getUserPlans();
+    return (plans[userId] || []).sort((a, b) => new Date(b.savedDate).getTime() - new Date(a.savedDate).getTime());
+  },
+
+  updateWorkoutDay(userId: string, dayIndex: number, newDay: WorkoutDay) {
+    const plans = getUserPlans();
+    const activePlan = (plans[userId] || []).find(p => p.isActive);
+    
+    if (activePlan) {
+      activePlan.plan.days[dayIndex] = newDay;
+      localStorage.setItem(USER_PLANS_KEY, JSON.stringify(plans));
+      return activePlan;
+    }
+  },
+
+  updateExercise(userId: string, dayIndex: number, exerciseIndex: number, newExercise: Exercise) {
+    const plans = getUserPlans();
+    const activePlan = (plans[userId] || []).find(p => p.isActive);
+    
+    if (activePlan && activePlan.plan.days[dayIndex]) {
+      activePlan.plan.days[dayIndex].exercises[exerciseIndex] = newExercise;
+      localStorage.setItem(USER_PLANS_KEY, JSON.stringify(plans));
+      return activePlan;
+    }
+  },
+
+  deleteUserPlan(userId: string, planSavedDate: string) {
+    const plans = getUserPlans();
+    if (plans[userId]) {
+      plans[userId] = plans[userId].filter(p => p.savedDate !== planSavedDate);
+      localStorage.setItem(USER_PLANS_KEY, JSON.stringify(plans));
+    }
   },
 };

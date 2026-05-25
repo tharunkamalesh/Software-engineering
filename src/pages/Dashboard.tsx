@@ -92,6 +92,44 @@ const Dashboard = () => {
       <main className="max-w-6xl mx-auto p-4 md:p-8">
         <motion.div variants={container} initial="hidden" animate="show" className="space-y-8">
 
+          {/* Quick Navigation */}
+          <motion.div variants={item}>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <Button 
+                variant="outline" 
+                className="gap-2 h-20 flex-col justify-center"
+                onClick={() => navigate('/dashboard')}
+              >
+                <Activity className="h-5 w-5" />
+                <span className="text-xs">Dashboard</span>
+              </Button>
+              <Button 
+                variant="outline" 
+                className="gap-2 h-20 flex-col justify-center"
+                onClick={() => navigate('/plans')}
+              >
+                <Dumbbell className="h-5 w-5" />
+                <span className="text-xs">Plans</span>
+              </Button>
+              <Button 
+                variant="outline" 
+                className="gap-2 h-20 flex-col justify-center"
+                onClick={() => navigate('/progress')}
+              >
+                <TrendingUp className="h-5 w-5" />
+                <span className="text-xs">Progress</span>
+              </Button>
+              <Button 
+                variant="outline" 
+                className="gap-2 h-20 flex-col justify-center"
+                onClick={() => navigate('/recommendations')}
+              >
+                <Target className="h-5 w-5" />
+                <span className="text-xs">AI Insights</span>
+              </Button>
+            </div>
+          </motion.div>
+
           {/* Top Section: Profile Summary & Microservices Status */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <motion.div variants={item} className="lg:col-span-2">
@@ -230,8 +268,9 @@ const Dashboard = () => {
             <motion.div variants={item}>
               <Card className="glass-card h-full">
                 <CardHeader>
-                  <CardTitle className="font-display flex items-center gap-2">
-                    <TrendingUp className="h-5 w-5 text-primary" /> Progress Analytics
+                  <CardTitle className="font-display flex items-center justify-between gap-2">
+                    <span className="flex items-center gap-2"><TrendingUp className="h-5 w-5 text-primary" /> Progress Analytics</span>
+                    <Button variant="outline" size="sm" onClick={() => navigate('/progress')}>View Full Dashboard →</Button>
                   </CardTitle>
                   <CardDescription>Visual tracker for weight and BMI trends</CardDescription>
                 </CardHeader>
@@ -332,8 +371,8 @@ const Dashboard = () => {
                   </div>
                 </CardContent>
                 <div className="p-4 pt-0">
-                  <Button variant="link" className="text-primary p-0 h-auto text-sm" onClick={() => navigate('/recommendations')}>
-                    View detailed workout service →
+                  <Button variant="link" className="text-primary p-0 h-auto text-sm" onClick={() => navigate('/plans')}>
+                    View all plans & exercises →
                   </Button>
                 </div>
               </Card>
@@ -363,8 +402,8 @@ const Dashboard = () => {
                   </div>
                 </CardContent>
                 <div className="p-4 pt-0">
-                  <Button variant="link" className="text-orange-500 p-0 h-auto text-sm" onClick={() => navigate('/recommendations')}>
-                    View detailed diet service →
+                  <Button variant="link" className="text-orange-500 p-0 h-auto text-sm" onClick={() => navigate('/plans')}>
+                    View all meals & nutrients →
                   </Button>
                 </div>
               </Card>

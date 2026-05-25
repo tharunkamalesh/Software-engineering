@@ -8,6 +8,8 @@ import AuthPage from "./pages/AuthPage";
 import Dashboard from "./pages/Dashboard";
 import InputFormPage from "./pages/InputFormPage";
 import RecommendationsPage from "./pages/RecommendationsPage";
+import WorkoutDietPlanPage from "./pages/WorkoutDietPlanPage";
+import ProgressTrackingPage from "./pages/ProgressTrackingPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -31,6 +33,8 @@ const AppRoutes = () => (
     <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
     <Route path="/input" element={<ProtectedRoute><InputFormPage /></ProtectedRoute>} />
     <Route path="/recommendations" element={<ProtectedRoute><RecommendationsPage /></ProtectedRoute>} />
+    <Route path="/plans" element={<ProtectedRoute><WorkoutDietPlanPage /></ProtectedRoute>} />
+    <Route path="/progress" element={<ProtectedRoute><ProgressTrackingPage /></ProtectedRoute>} />
     <Route path="*" element={<NotFound />} />
   </Routes>
 );

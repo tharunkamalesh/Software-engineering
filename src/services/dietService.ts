@@ -95,8 +95,106 @@ const dietPlans: Record<string, DietPlan> = {
   },
 };
 
+export interface UserDietPlan {
+  userId: string;
+  goal: string;
+  plan: DietPlan;
+  weeklyPlan: Record<string, DietDay>;
+  savedDate: string;
+  isActive: boolean;
+}
+
+const USER_DIET_PLANS_KEY = 'fitness_user_diet_plans';
+
+function getUserDietPlans(): Record<string, UserDietPlan[]> {
+  return JSON.parse(localStorage.getItem(USER_DIET_PLANS_KEY) || '{}');
+}
+
+// Helper to create a weekly diet plan
+function createWeeklyDietPlan(sampleDay: DietDay): Record<string, DietDay> {
+  const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+  const weekly: Record<string, DietDay> = {};
+  days.forEach(day => {
+    weekly[day] = { ...sampleDay };
+  });
+  return weekly;
+}
+
 export const dietService = {
   getDietPlan(goal: string): DietPlan {
     return dietPlans[goal] || dietPlans.maintenance;
+  },
+
+  saveUserDietPlan(userId: string, goal: string, customPlan?: DietPlan) {
+    const plans = getUserDietPlans();
+    if (!plans[userId]) plans[userId] = [];
+    
+    const plan = customPlan || this.getDietPlan(goal);
+    
+    // Mark previous active plan as inactive
+    plans[userId].forEach(p => p.isActive = false);
+    
+    const userPlan: UserDietPlan = {
+      userId,
+      goal,
+      plan,
+      weeklyPlan: createWeeklyDietPlan(plan.sampleDay),
+      savedDate: new Date().toISOString(),
+      isActive: true,
+    };
+    
+    plans[userId].push(userPlan);
+    localStorage.setItem(USER_DIET_PLANS_KEY, JSON.stringify(plans));
+    return userPlan;
+  },
+
+  getUserActiveDietPlan(userId: string): UserDietPlan | undefined {
+    const plans = getUserDietPlans();
+    return (plans[userId] || []).find(p => p.isActive);
+  },
+
+  getUserDietPlans(userId: string): UserDietPlan[] {
+    const plans = getUserDietPlans();
+    return (plans[userId] || []).sort((a, b) => new Date(b.savedDate).getTime() - new Date(a.savedDate).getTime());
+  },
+
+  updateDayMeals(userId: string, day: string, meals: Meal[]) {
+    const plans = getUserDietPlans();
+    const activePlan = (plans[userId] || []).find(p => p.isActive);
+    
+    if (activePlan && activePlan.weeklyPlan[day]) {
+      activePlan.weeklyPlan[day].meals = meals;
+      localStorage.setItem(USER_DIET_PLANS_KEY, JSON.stringify(plans));
+      return activePlan;
+    }
+  },
+
+  updateMeal(userId: string, day: string, mealIndex: number, newMeal: Meal) {
+    const plans = getUserDietPlans();
+    const activePlan = (plans[userId] || []).find(p => p.isActive);
+    
+    if (activePlan && activePlan.weeklyPlan[day]) {
+      activePlan.weeklyPlan[day].meals[mealIndex] = newMeal;
+      localStorage.setItem(USER_DIET_PLANS_KEY, JSON.stringify(plans));
+      return activePlan;
+    }
+  },
+
+  getTotalDailyCalories(userId: string, day: string): number {
+    const plans = getUserDietPlans();
+    const activePlan = (plans[userId] || []).find(p => p.isActive);
+    
+    if (activePlan && activePlan.weeklyPlan[day]) {
+      return activePlan.weeklyPlan[day].meals.reduce((sum, meal) => sum + meal.calories, 0);
+    }
+    return 0;
+  },
+
+  deleteUserDietPlan(userId: string, planSavedDate: string) {
+    const plans = getUserDietPlans();
+    if (plans[userId]) {
+      plans[userId] = plans[userId].filter(p => p.savedDate !== planSavedDate);
+      localStorage.setItem(USER_DIET_PLANS_KEY, JSON.stringify(plans));
+    }
   },
 };
